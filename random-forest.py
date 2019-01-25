@@ -45,6 +45,12 @@ class my_RandomForestClassifier():
         # Build the list of trees with the create_tree function
         self.trees = [self.create_tree() for i in range(n_trees)]
         
+    def create_tree(self):
+        '''
+        This is the function that creates the decision trees for the random forest
+        '''
+        
+        
         
         
         
