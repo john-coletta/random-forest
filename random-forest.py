@@ -49,6 +49,25 @@ class my_RandomForestClassifier():
         '''
         This is the function that creates the decision trees for the random forest
         '''
+        # Get the indexes for the sample the tree will be built on
+        idxs = np.random.permutation(len(self.y))[:self.sample_size]
+        # Get the features for this tree
+        f_idxs = np.random.permutation(self.x.shape[1])[:self.n_features]
+        # This returns the tree
+        return DecisionTree(self.x.iloc[idxs], self.y[idxs], self.n_features, f_idxs,
+                            idxs=np.array(range(self.sample_size)), depth=self.depth, min_leaf=self.min_leaf)
+        '''
+        ^This function will be defined below
+        '''
+        
+    def predict(self, x):
+        '''
+        This is the predict method that takes the mean of all the created trees
+        NEED TO MAKE INTO A CLASSIFIER
+        '''
+        return np.mean([t.predict(x) for t in self.trees], axis=0)
+    
+    
         
         
         
