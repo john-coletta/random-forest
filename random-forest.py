@@ -38,6 +38,12 @@ class my_RandomForestClassifier():
             
         else:
             self.n_features = n_features
+        # Print the features out    
+        print(self.n_features, 'sha: ', x.shape[1])
+        # Define the other variables from the input
+        self.x, self.y, self.sample_size, self.depth, self.min_leaf = x, y, sample_size, depth, min_leaf
+        # Build the list of trees with the create_tree function
+        self.trees = [self.create_tree() for i in range(n_trees)]
         
         
         
