@@ -21,9 +21,25 @@ class my_RandomForestClassifier():
         # x is the predictor variables
         # y is the target
         # n_trees is the number of trees in the random forest
-        # n_features is how many features to consider at each split
+        # n_features is how many features to consider each tree
         # sample_size is the sample of data to build each tree on
         # depth is the max depth of the tree
         # min_leaf is the minimum number of observations for a leaf to split
+        
+        # Set the see
+        np.random.seed(69)
+        
+        # Set the number of features, either sqrt, log2, or all features
+        if n_features == 'sqrt':
+            self.n_features = int(np.sqrt(x.shape[1]))
+        
+        elif n_features == 'log2':
+            self.n_features = int(np.log2(x.shape[1]))
+            
+        else:
+            self.n_features = n_features
+        
+        
+        
         
         
