@@ -87,6 +87,10 @@ class DecisionTree():
         Initialize the tree with x, y, the number of features, the index of the features, 
         the index of the x's, the depth and the min_leaf size
         '''
+        # In case the indexes are not defined just take all the rows
+        if idxs is None:
+            idxs = np.arange(len(y))
+            
         self.x, self.y, self.idxs, self.min_leaf, self.f_idxs = x, y, idxs, min_leaf, f_idxs
         self.depth = depth
         self.n_features = n_features
@@ -108,6 +112,60 @@ class DecisionTree():
     def find_better_split(self, var_idx):
         # To do
         pass
+    
+    
+        for i in range(0, self.n-self.min_leaf-1):
+            '''In this loop we loop through all values for a given leaf
+            and split on that, calculated the weighted standard deviation for this
+            split, and compare to the previous lowest value. If it is the lowest,
+            it sets the split at this value.
+            '''
+            # Pull the value from the sorted list
+            xi, yi = sort_x[i], sort_y[i]
+            # Increment the counts for the left and right nodes
+            lhs_cnt += 1
+            rhs_cnt -= 1
+            # Increment the sum of values in the left and right nodes
+            lhs_sum += yi
+            rhs_sum -= yi
+            # Increment the sum of squared values in the left and right nodes
+            lhs_sum2 += yi**2
+            rhs_sum2 -= yi**2
+            
+            if i < self.min_leaf or xi == sort_x[i+1]:
+                continue
+            
+            # Get the weighted standard deviation for this split as curr_score
+            lhs_std = std_agg(lhs_cnt, lhs_sum, lhs_sum2)
+            rhs_std = std_agg(rhs_cnt, rhs_sum, rhs_sum2)
+            curr_score = lhs_std*lhs_cnt + rhs_std*rhs_cnt
+            # If this score is better, update the split to xi
+            if curr_score < self.score:
+                self.var_idx, self.score, self.split = var_idx, curr_score, xi
+                
+    @property
+    def split_name(self):
+        return self.x.columns[self.var_idx]
+    
+    @property
+    def split_col(self):
+        return self.x.values[self.idxs, self.var_idx]
+    
+    @property
+    def is_leaf(self):
+        return self.score == float('inf') or self.depth <= 0
+    
+    def predict(self, x):
+        return np.array([self.predict_row(xi) for xi in x])
+    
+    def predict_row(self, xi):
+        if self.is_leaf:
+            return self.val
+        
+        t = self.lhs if xi[self.var_idx] <= self.split else self.rhs
+        
+        return t.predict_row(xi)
+            
     
 
     
