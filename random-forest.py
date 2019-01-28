@@ -67,6 +67,16 @@ class my_RandomForestClassifier():
         '''
         return np.mean([t.predict(x) for t in self.trees], axis=0)
     
+    
+def std_agg(cnt, s1, s2):
+    '''
+    This function calculates the standard deviation
+    of two halves of our data (for used in determining
+    the best split in our decision tree class)
+    '''
+    return math.sqrt((s2/cnt) - (s1/cnt)**2)
+
+
 class DecisionTree():
     '''
     This class is a basic decision tree that takes data and 
@@ -88,6 +98,18 @@ class DecisionTree():
         self.score = float('inf')
         # Perform the split (defined later)
         self.find_varsplit()
+        
+    def find_varsplit(self):
+        # Find the split (make recursive)
+        for i in self.f_idxs:
+            # Find any better split
+            self.find_better_split(i)
+            
+    def find_better_split(self, var_idx):
+        # To do
+        pass
+    
+
     
     
         
