@@ -67,6 +67,28 @@ class my_RandomForestClassifier():
         '''
         return np.mean([t.predict(x) for t in self.trees], axis=0)
     
+class DecisionTree():
+    '''
+    This class is a basic decision tree that takes data and 
+    produces and stores the splits
+    '''
+    def __init__(self, x, y, n_features, f_idxs, idxs, depth=10, min_leaf=5):
+        '''
+        Initialize the tree with x, y, the number of features, the index of the features, 
+        the index of the x's, the depth and the min_leaf size
+        '''
+        self.x, self.y, self.idxs, self.min_leaf, self.f_idxs = x, y, idxs, min_leaf, f_idxs
+        self.depth = depth
+        self.n_features = n_features
+        # Here get the number of observations and the number of columns
+        self.n, self.c = len(idxs), x.shape[1]
+        # Get the value for the leaf (this should be changed to voting not averaging)
+        self.val = np.mean(y[idxs])
+        # Set the score
+        self.score = float('inf')
+        # Perform the split (defined later)
+        self.find_varsplit()
+    
     
         
         
