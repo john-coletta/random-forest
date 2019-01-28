@@ -57,7 +57,7 @@ class my_RandomForestClassifier():
         return DecisionTree(self.x.iloc[idxs], self.y[idxs], self.n_features, f_idxs,
                             idxs=np.array(range(self.sample_size)), depth=self.depth, min_leaf=self.min_leaf)
         '''
-        ^This function will be defined below
+        ^This class will be defined below
         '''
         
     def predict(self, x):
