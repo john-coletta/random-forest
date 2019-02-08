@@ -8,16 +8,18 @@ My attempt at creating my own random forest class
 """
 # Import libraries
 import numpy as np
+from sklearn.datasets import load_breast_cancer, load_diabetes
 import pandas as pd
+import math
 
-class my_RandomForestClassifier():
+class my_RandomForestRegressor():
     '''
-    This object is a random forest binary classifier that takes the data directly
+    This object is a random forest regressor that takes the data directly
     as an arguement (so no fit method) and runs a random forest algorithm.
     Lot's of help from a towardsdatascience article
     '''
     
-    def __init__(self, x, y, n_trees, n_features, sample_size, depth=5, min_leaf=5):
+    def __init__(self, x, y, n_trees, n_features, sample_size, depth=10, min_leaf=5):
         # x is the predictor variables
         # y is the target
         # n_trees is the number of trees in the random forest
@@ -41,7 +43,7 @@ class my_RandomForestClassifier():
         # Print the features out    
         print(self.n_features, 'sha: ', x.shape[1])
         # Define the other variables from the input
-        self.x, self.y, self.sample_size, self.depth, self.min_leaf = x, y, sample_size, depth, min_leaf
+        self.x, self.y, self.sample_size, self.depth, self.min_leaf = x, y, int(np.floor(sample_size * len(y))), depth, min_leaf
         # Build the list of trees with the create_tree function
         self.trees = [self.create_tree() for i in range(n_trees)]
         
@@ -98,6 +100,7 @@ class DecisionTree():
         self.n, self.c = len(idxs), x.shape[1]
         # Get the value for the leaf (this should be changed to voting not averaging)
         self.val = np.mean(y[idxs])
+        #print(self.val)
         # Score is how well a split divides the original set, initially set to infinity
         self.score = float('inf')
         # Perform the split (defined later)
@@ -106,6 +109,7 @@ class DecisionTree():
     def find_varsplit(self):
         # Find the split (recursive)
         for i in self.f_idxs:
+            #print(i)
             # Find any better split
             self.find_better_split(i)
         # Check if we are in a leaf
@@ -126,12 +130,17 @@ class DecisionTree():
                                 min_leaf=self.min_leaf)
             
     def find_better_split(self, var_idx):
+        #print(var_idx)
         # Get the values for the column and the target
         x, y = self.x.values[self.idxs, var_idx], self.y[self.idxs]
+        #print(x)
+        #print(y)
         # Get the indices to sort on the predictor column
         sort_idx = np.argsort(x)
+        #print(sort_idx)
         # Sort both target and predictor
-        sort_y, sort_x = y[sort_idx], x[sort_idx]
+        sort_y = y[sort_idx]
+        sort_x = x[sort_idx]
         # Set the initial split (i.e. no split)
         rhs_cnt, rhs_sum, rhs_sum2 = self.n, sort_y.sum(), (sort_y**2).sum()
         lhs_cnt, lhs_sum, lhs_sum2 = 0, 0.0, 0.0
@@ -195,9 +204,18 @@ class DecisionTree():
         
         return t.predict_row(xi)
             
-    
+diabetes = load_diabetes()
+data = np.c_[diabetes.data, diabetes.target]
+df = pd.DataFrame(data, columns=np.append(diabetes['feature_names'],'target'))
+var = df.drop('target', axis=1)
+target = df.target.values
 
-    
+forest1 = my_RandomForestRegressor(var, target, n_trees=10, n_features='sqrt', sample_size=0.9, depth=10, min_leaf=5)  
+
+preds = forest1.predict(var.values)
+
+error = (preds - target)**2
+np.mean(np.sqrt(error))
     
         
         
