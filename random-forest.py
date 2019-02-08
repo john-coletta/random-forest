@@ -216,10 +216,21 @@ if __name__ == '__main__':
     
     preds = forest1.predict(var.values)
     
-    error = (preds - target)**2
+    error = np.mean((preds - target)**2)
     print(np.sqrt(error))
         
-        
+diabetes = load_diabetes()
+data = np.c_[diabetes.data, diabetes.target]
+df = pd.DataFrame(data, columns=np.append(diabetes['feature_names'],'target'))
+var = df.drop('target', axis=1)
+target = df.target.values   
+    
+forest2 = my_RandomForestRegressor(var, target, n_trees=1000, n_features='sqrt',
+                                   sample_size=1, depth=10, min_leaf=5)
+
+preds2 = forest2.predict(var.values)
+error2 = np.mean((preds2-target)**2)
+print(np.sqrt(error2))
         
         
         
