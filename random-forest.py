@@ -104,21 +104,37 @@ class DecisionTree():
         self.find_varsplit()
         
     def find_varsplit(self):
-        # Find the split (make recursive)
+        # Find the split (recursive)
         for i in self.f_idxs:
             # Find any better split
             self.find_better_split(i)
+        # Check if we are in a leaf
+        if self.is_leaf:
+            return
+        # Here we set which column to split on
+        x = self.split_col
+        # Here we set the observations that the left and right hand sides of the tree
+        lhs = np.nonzero(x<=self.split)[0]
+        rhs = np.nonzero(x>self.split)[0]
+        # Set the features that the left and right trees have (bagging)
+        lf_idxs = np.random.permutation(self.x.shape[1])[:self.n_features]
+        rf_idxs = np.random.permutation(self.x.shape[1])[:self.n_features]
+        # Define the left and right hand sides as more trees, each time it finds the best split
+        self.lhs = DecisionTree(self.x, self.y, self.n_features, lf_idxs, self.idxs[lhs], depth=self.depth-1,
+                                min_leaf=self.min_leaf)
+        self.rhs = DecisionTree(self.x, self.y, self.n_features, rf_idxs, self.idxs[rhs], depth=self.depth-1,
+                                min_leaf=self.min_leaf)
             
     def find_better_split(self, var_idx):
-        # Here we sort the column
+        # Get the values for the column and the target
         x, y = self.x.values[self.idxs, var_idx], self.y[self.idxs]
+        # Get the indices to sort on the predictor column
         sort_idx = np.argsort(x)
+        # Sort both target and predictor
         sort_y, sort_x = y[sort_idx], x[sort_idx]
-        
+        # Set the initial split (i.e. no split)
         rhs_cnt, rhs_sum, rhs_sum2 = self.n, sort_y.sum(), (sort_y**2).sum()
         lhs_cnt, lhs_sum, lhs_sum2 = 0, 0.0, 0.0
-    
-    
     
         for i in range(0, self.n-self.min_leaf-1):
             '''In this loop we loop through all values for a given leaf
@@ -140,7 +156,7 @@ class DecisionTree():
             # Increment the sum of squared values in the left and right nodes
             lhs_sum2 += yi**2
             rhs_sum2 -= yi**2
-            
+            # Make sure our min leaf criteria is not violated
             if i < self.min_leaf or xi == sort_x[i+1]:
                 continue
             
