@@ -203,20 +203,21 @@ class DecisionTree():
         t = self.lhs if xi[self.var_idx] <= self.split else self.rhs
         
         return t.predict_row(xi)
-            
-diabetes = load_diabetes()
-data = np.c_[diabetes.data, diabetes.target]
-df = pd.DataFrame(data, columns=np.append(diabetes['feature_names'],'target'))
-var = df.drop('target', axis=1)
-target = df.target.values
 
-forest1 = my_RandomForestRegressor(var, target, n_trees=10, n_features='sqrt', sample_size=0.9, depth=10, min_leaf=5)  
-
-preds = forest1.predict(var.values)
-
-error = (preds - target)**2
-np.mean(np.sqrt(error))
+if __name__ == '__main__':
     
+    diabetes = load_diabetes()
+    data = np.c_[diabetes.data, diabetes.target]
+    df = pd.DataFrame(data, columns=np.append(diabetes['feature_names'],'target'))
+    var = df.drop('target', axis=1)
+    target = df.target.values
+    
+    forest1 = my_RandomForestRegressor(var, target, n_trees=10, n_features='sqrt', sample_size=0.9, depth=10, min_leaf=5)  
+    
+    preds = forest1.predict(var.values)
+    
+    error = (preds - target)**2
+    print(np.sqrt(error))
         
         
         
