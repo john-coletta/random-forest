@@ -98,7 +98,7 @@ class DecisionTree():
         self.n, self.c = len(idxs), x.shape[1]
         # Get the value for the leaf (this should be changed to voting not averaging)
         self.val = np.mean(y[idxs])
-        # Set the score
+        # Score is how well a split divides the original set, initially set to infinity
         self.score = float('inf')
         # Perform the split (defined later)
         self.find_varsplit()
@@ -110,8 +110,14 @@ class DecisionTree():
             self.find_better_split(i)
             
     def find_better_split(self, var_idx):
-        # To do
-        pass
+        # Here we sort the column
+        x, y = self.x.values[self.idxs, var_idx], self.y[self.idxs]
+        sort_idx = np.argsort(x)
+        sort_y, sort_x = y[sort_idx], x[sort_idx]
+        
+        rhs_cnt, rhs_sum, rhs_sum2 = self.n, sort_y.sum(), (sort_y**2).sum()
+        lhs_cnt, lhs_sum, lhs_sum2 = 0, 0.0, 0.0
+    
     
     
         for i in range(0, self.n-self.min_leaf-1):
@@ -119,6 +125,9 @@ class DecisionTree():
             and split on that, calculated the weighted standard deviation for this
             split, and compare to the previous lowest value. If it is the lowest,
             it sets the split at this value.
+            The first step is to sort the column so that we can iterate through the values
+            to split the data each time. We calculate the standard deviation for each split and store the
+            index associated with that split.
             '''
             # Pull the value from the sorted list
             xi, yi = sort_x[i], sort_y[i]
@@ -145,14 +154,18 @@ class DecisionTree():
                 
     @property
     def split_name(self):
+        # Get the name of the column we split on
         return self.x.columns[self.var_idx]
     
     @property
     def split_col(self):
+        # Get the values for this column we have split on
         return self.x.values[self.idxs, self.var_idx]
     
     @property
     def is_leaf(self):
+        # Used to determin if a node is a leaf or not 
+        # (either no split (so score is inf) or depth <= 0 so reached max depth)
         return self.score == float('inf') or self.depth <= 0
     
     def predict(self, x):
