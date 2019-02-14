@@ -240,9 +240,9 @@ print(np.sqrt(error2))
 
 class my_RandomForestClassifier():
     '''
-    This object is a random forest regressor that takes the data directly
+    This object is a random forest classifier that takes the data directly
     as an arguement (so no fit method) and runs a random forest algorithm.
-    Lot's of help from a towardsdatascience article
+    Lot's of help from a towardsdatascience article on creating a regressor
     '''
     
     def __init__(self, x, y, n_trees, n_features, sample_size, depth=10, min_leaf=5):
@@ -253,6 +253,11 @@ class my_RandomForestClassifier():
         # sample_size is the sample of data to build each tree on
         # depth is the max depth of the tree
         # min_leaf is the minimum number of observations for a leaf to split
+        '''
+        Everything should be very similar to the regression case
+        besides the predictio being the majority voting (mode)
+        instead of the mean
+        '''
         
         # Set the see
         np.random.seed(69)
@@ -284,9 +289,7 @@ class my_RandomForestClassifier():
         # This returns the tree
         return DecisionTreeClassifier(self.x.iloc[idxs], self.y[idxs], self.n_features, f_idxs,
                             idxs=np.array(range(self.sample_size)), depth=self.depth, min_leaf=self.min_leaf)
-        '''
-        ^This class will be defined below
-        '''
+        
         
     def predict(self, x):
         '''
@@ -296,19 +299,25 @@ class my_RandomForestClassifier():
         return np.mode([t.predict(x) for t in self.trees], axis=0)
     
     
-def entropy(cnt, s1, s2):
+def entropy(node):
     '''
-    This function calculates the standard deviation
-    of two halves of our data (for used in determining
-    the best split in our decision tree class)
+    This function calculates the entropy of a node for use
+    later in determining information gain
+    Here node is simply the array of target
+    (so that the mean is the percent 1)
     '''
-    return math.sqrt((s2/cnt) - (s1/cnt)**2)
+    p1 = np.mean(node)
+    p2 = 1 - p1
+    
+    ent1 = (-1) * (p1 * np.log2(p1))
+    ent2 = (-1) * (p2 * np.log2(p2))
+    return (ent1 + ent2)
 
 
 class DecisionTreeClassifier():
     '''
     This class is a basic decision tree that takes data and 
-    produces and stores the splits
+    produces and stores the splits (binary classifcation case)
     '''
     def __init__(self, x, y, n_features, f_idxs, idxs, depth=10, min_leaf=5):
         '''
@@ -324,11 +333,12 @@ class DecisionTreeClassifier():
         self.n_features = n_features
         # Here get the number of observations and the number of columns
         self.n, self.c = len(idxs), x.shape[1]
-        # Get the value for the leaf (this should be changed to voting not averaging)
-        self.val = np.mean(y[idxs])
+        # Get the value for the leaf (by voting)
+        self.val = np.mode(y[idxs])
         #print(self.val)
-        # Score is how well a split divides the original set, initially set to infinity
-        self.score = float('inf')
+        # Score is how well a split divides the original set, initially set to the entropy
+        # of the node
+        self.score = entropy(y)
         # Perform the split (defined later)
         self.find_varsplit()
         
