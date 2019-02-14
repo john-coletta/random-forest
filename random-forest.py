@@ -124,9 +124,9 @@ class DecisionTreeRegressor():
         lf_idxs = np.random.permutation(self.x.shape[1])[:self.n_features]
         rf_idxs = np.random.permutation(self.x.shape[1])[:self.n_features]
         # Define the left and right hand sides as more trees, each time it finds the best split
-        self.lhs = DecisionTree(self.x, self.y, self.n_features, lf_idxs, self.idxs[lhs], depth=self.depth-1,
+        self.lhs = DecisionTreeRegressor(self.x, self.y, self.n_features, lf_idxs, self.idxs[lhs], depth=self.depth-1,
                                 min_leaf=self.min_leaf)
-        self.rhs = DecisionTree(self.x, self.y, self.n_features, rf_idxs, self.idxs[rhs], depth=self.depth-1,
+        self.rhs = DecisionTreeRegressor(self.x, self.y, self.n_features, rf_idxs, self.idxs[rhs], depth=self.depth-1,
                                 min_leaf=self.min_leaf)
             
     def find_better_split(self, var_idx):
@@ -360,9 +360,9 @@ class DecisionTreeClassifier():
         lf_idxs = np.random.permutation(self.x.shape[1])[:self.n_features]
         rf_idxs = np.random.permutation(self.x.shape[1])[:self.n_features]
         # Define the left and right hand sides as more trees, each time it finds the best split
-        self.lhs = DecisionTree(self.x, self.y, self.n_features, lf_idxs, self.idxs[lhs], depth=self.depth-1,
+        self.lhs = DecisionTreeClassifier(self.x, self.y, self.n_features, lf_idxs, self.idxs[lhs], depth=self.depth-1,
                                 min_leaf=self.min_leaf)
-        self.rhs = DecisionTree(self.x, self.y, self.n_features, rf_idxs, self.idxs[rhs], depth=self.depth-1,
+        self.rhs = DecisionTreeClassifier(self.x, self.y, self.n_features, rf_idxs, self.idxs[rhs], depth=self.depth-1,
                                 min_leaf=self.min_leaf)
             
     def find_better_split(self, var_idx):
@@ -377,11 +377,11 @@ class DecisionTreeClassifier():
         # Sort both target and predictor
         sort_y = y[sort_idx]
         sort_x = x[sort_idx]
-        # Set the initial split (i.e. no split)
-        rhs_cnt, rhs_sum, rhs_sum2 = self.n, sort_y.sum(), (sort_y**2).sum()
-        lhs_cnt, lhs_sum, lhs_sum2 = 0, 0.0, 0.0
+        # Set the initial split (i.e. no split)        
+        rhs_cnt, rhs_y = self.n, sort_y
+        lhs_cnt, lhs_y = 0, []
     
-        for i in range(0, self.n-self.min_leaf-1):
+        for i in range(1, self.n-self.min_leaf-1):
             '''In this loop we loop through all values for a given leaf
             and split on that, calculated the weighted standard deviation for this
             split, and compare to the previous lowest value. If it is the lowest,
@@ -391,24 +391,20 @@ class DecisionTreeClassifier():
             index associated with that split.
             '''
             # Pull the value from the sorted list
-            xi, yi = sort_x[i], sort_y[i]
+            xi = sort_x[i]
+            rhs_y = sort_y[i:]
+            lhs_y = sort_y[:i]
             # Increment the counts for the left and right nodes
             lhs_cnt += 1
             rhs_cnt -= 1
-            # Increment the sum of values in the left and right nodes
-            lhs_sum += yi
-            rhs_sum -= yi
-            # Increment the sum of squared values in the left and right nodes
-            lhs_sum2 += yi**2
-            rhs_sum2 -= yi**2
             # Make sure our min leaf criteria is not violated
             if i < self.min_leaf or xi == sort_x[i+1]:
                 continue
             
             # Get the weighted standard deviation for this split as curr_score
-            lhs_std = std_agg(lhs_cnt, lhs_sum, lhs_sum2)
-            rhs_std = std_agg(rhs_cnt, rhs_sum, rhs_sum2)
-            curr_score = lhs_std*lhs_cnt + rhs_std*rhs_cnt
+            lhs_ent = entropy(lhs_y)
+            rhs_ent = entropy(rhs_y)
+            curr_score = ((lhs_ent * lhs_cnt) + (rhs_ent * rhs_cnt)) / (lhs_cnt + rhs_cnt)
             # If this score is better, update the split to xi
             if curr_score < self.score:
                 self.var_idx, self.score, self.split = var_idx, curr_score, xi
