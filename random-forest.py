@@ -255,7 +255,7 @@ class my_RandomForestClassifier():
         # min_leaf is the minimum number of observations for a leaf to split
         '''
         Everything should be very similar to the regression case
-        besides the predictio being the majority voting (mode)
+        besides the predictio being the probability (mean)
         instead of the mean
         '''
         
@@ -293,10 +293,10 @@ class my_RandomForestClassifier():
         
     def predict(self, x):
         '''
-        This is the predict method that takes the mode (majority voting)
+        This is the predict method that takes the mean probability
         of all the created trees
         '''
-        return np.mode([t.predict(x) for t in self.trees], axis=0)
+        return np.mean([t.predict(x) for t in self.trees], axis=0)
     
     
 def entropy(node):
@@ -306,12 +306,19 @@ def entropy(node):
     Here node is simply the array of target
     (so that the mean is the percent 1)
     '''
+    if len(node) == 0:
+        return 0
+    
     p1 = np.mean(node)
     p2 = 1 - p1
     
-    ent1 = (-1) * (p1 * np.log2(p1))
-    ent2 = (-1) * (p2 * np.log2(p2))
-    return (ent1 + ent2)
+    if p1 == 0 or p2 == 0:
+        return 0
+    
+    else:
+        ent1 = (-1) * (p1 * np.log2(p1))
+        ent2 = (-1) * (p2 * np.log2(p2))
+        return (ent1 + ent2)
 
 
 class DecisionTreeClassifier():
@@ -334,7 +341,7 @@ class DecisionTreeClassifier():
         # Here get the number of observations and the number of columns
         self.n, self.c = len(idxs), x.shape[1]
         # Get the value for the leaf (by voting)
-        self.val = np.mode(y[idxs])
+        self.val = np.mean(y[idxs])
         #print(self.val)
         # Score is how well a split divides the original set, initially set to the entropy
         # of the node
@@ -345,7 +352,6 @@ class DecisionTreeClassifier():
     def find_varsplit(self):
         # Find the split (recursive)
         for i in self.f_idxs:
-            #print(i)
             # Find any better split
             self.find_better_split(i)
         # Check if we are in a leaf
@@ -381,7 +387,7 @@ class DecisionTreeClassifier():
         rhs_cnt, rhs_y = self.n, sort_y
         lhs_cnt, lhs_y = 0, []
     
-        for i in range(1, self.n-self.min_leaf-1):
+        for i in range(0, self.n-self.min_leaf-1):
             '''In this loop we loop through all values for a given leaf
             and split on that, calculated the weighted standard deviation for this
             split, and compare to the previous lowest value. If it is the lowest,
@@ -401,9 +407,10 @@ class DecisionTreeClassifier():
             if i < self.min_leaf or xi == sort_x[i+1]:
                 continue
             
-            # Get the weighted standard deviation for this split as curr_score
+            # Get the weighted entropy for this split as curr_score
             lhs_ent = entropy(lhs_y)
             rhs_ent = entropy(rhs_y)
+            print(lhs_ent, rhs_ent)
             curr_score = ((lhs_ent * lhs_cnt) + (rhs_ent * rhs_cnt)) / (lhs_cnt + rhs_cnt)
             # If this score is better, update the split to xi
             if curr_score < self.score:
@@ -422,8 +429,8 @@ class DecisionTreeClassifier():
     @property
     def is_leaf(self):
         # Used to determin if a node is a leaf or not 
-        # (either no split (so score is inf) or depth <= 0 so reached max depth)
-        return self.score == float('inf') or self.depth <= 0
+        # (either no split (so score is 0 (min entroy)) or depth <= 0 so reached max depth)
+        return self.score == 0 or self.depth <= 0
     
     def predict(self, x):
         return np.array([self.predict_row(xi) for xi in x])
@@ -437,5 +444,13 @@ class DecisionTreeClassifier():
         return t.predict_row(xi)
         
         
+cancer = load_breast_cancer()
+
+data_can = np.c_[cancer.data, cancer.target]
+df_can = pd.DataFrame(data_can, columns=np.append(cancer['feature_names'],'target'))
+var_c = df_can.drop('target', axis=1)
+target_c = df_can.target.values
+
+forest_class = my_RandomForestClassifier(var_c, target_c, n_trees=1, n_features='sqrt', sample_size=1)
         
         
